@@ -1,0 +1,17 @@
+{
+    "name": "persona-server",
+    "title": "Mozilla's Persona Server",
+    "version": "0.1.0",
+    "licenses": [
+        {
+            "type": "Apache-2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0"
+        }
+    ],
+    "keywords": [],
+    "devDependencies": {
+        "express": "~3.4.8",
+        "request": "~2.33.0",
+        "querystring": "~0.2.0"
+    }
+}

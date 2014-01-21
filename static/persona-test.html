@@ -1,0 +1,64 @@
+<html>
+    <head>
+        <title>AeroGear Mozilla Persona Authentication Adapter Test</title>
+        <script src="https://login.persona.org/include.js"></script>
+        <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="../src/aerogear.core.js"></script>
+        <script type="text/javascript" src="../src/authentication/aerogear.auth.js"></script>
+        <script type="text/javascript" src="../src/authentication/adapters/persona.js"></script>
+        <script>
+            $( document ).ready( function () {
+
+                var persona = AeroGear.Auth({
+                        name: 'persona',
+                        type: 'Persona',
+                        settings: {
+                            verificationEndpoint: "http://127.0.0.1:3000/verify"
+                        }
+                    }).modules.persona;
+
+                $( '#login' ).click( function() {
+
+                    var onSuccessVerification = function( response ) {
+                            console.log( "Assertion was successfully verified email: '" + response  + "'");
+                            $( '#email' ).html( "<p>" + 'Logged in email: ' + response  + "</p>");
+                            $( '#logout' ).fadeIn();
+                            $( '#login' ).fadeOut();
+                        }, 
+                        onFailedVerification = function( error ) {
+                            console.log( "Assertion verification failed error: " + error );
+                        },
+                        onLoginError = function () {
+                            console.log("ERROR during Mozilla Persona login");
+                        };
+
+                        persona.login({ 
+                            onAssertion: function ( assertion ) {
+                                persona.verify( { assertion: assertion }, { success: onSuccessVerification, error: onFailedVerification } );
+                            },
+                            error: onLoginError
+                        });
+
+                });
+
+                $( '#logout').click( function() {
+                    var onLogout = function () {
+                        $( '#email' ).html( '' );
+                        $( '#logout' ).fadeOut();
+                        $( '#login' ).fadeIn();
+                    };
+
+                    persona.logout( onLogout );
+                });
+
+            });
+        </script>
+    </head>
+    <body>
+        <div id="buttons">
+            <input type="button" id="login" value="Login using Mozilla Persona"></input>
+            <input type="button" id="logout" style="display:none" value="Logout"></input>
+        </div>
+        <div id="email"></div>
+    </body>
+</html>
