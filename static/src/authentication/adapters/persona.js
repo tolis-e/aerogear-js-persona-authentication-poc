@@ -13,6 +13,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+/**
+    The Persona adapter is an authentication adapter based on the Mozilla's Persona sign-in system. It uses jQuery.ajax to communicate with the verification API.
+    Persona allows you to sign in to sites using any of your existing email addresses; and if you use Yahoo! or Gmail for email, you will be able to sign in without having to create a new password.
+    @status Experimental
+    @constructs AeroGear.Authorization.adapters.Persona
+    @param {String} name - the name used to reference this particular authz module
+    @param {Object} settings={} - the settings to be passed to the adapter
+    @param {String} [settings.verificationEndpoint] - the required endpoint to verify the generated signed assertions
+    @returns {Object} The created authentication module
+    @example
+    var persona = AeroGear.Auth({
+        name: 'persona',
+        type: 'Persona',
+        settings: {
+            verificationEndpoint: "http://127.0.0.1:3000/verify"
+        }
+    }).modules.persona;
+ */
 AeroGear.Auth.adapters.Persona = function( name, settings ) {
     
     // Allow instantiation without using new
@@ -58,7 +76,7 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
     /**
      * Process the options passed to a method
      * @private
-     * @augments Rest
+     * @augments Persona
      * */
     this.processOptions = function( options ) {
         var processedOptions = {};
@@ -120,7 +138,7 @@ AeroGear.Auth.adapters.Persona.prototype.login = function( options ) {
     var that = this,
         onAssertion = function ( assertion ) {
             if ( assertion ) {
-                options.onAssertion.apply ( that, [ assertion ] );
+                options.onAssertion.apply ( that, arguments );
             } else {
                 options.error.apply( this, arguments );
             }
