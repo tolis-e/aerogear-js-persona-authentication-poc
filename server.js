@@ -74,7 +74,7 @@ app.post("/verify", function ( req, res ) {
     console.log( "Assertion Verification Completed" );
 });
 
-// server static files
+// serve static files
 app.use( express.static( __dirname + "/static" ) );
 app.listen( PORT );
 console.log( 'Mozilla Persona Server Listening on port ' + PORT );
