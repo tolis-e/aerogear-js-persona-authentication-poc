@@ -32,7 +32,6 @@
     }).modules.persona;
  */
 AeroGear.Auth.adapters.Persona = function( name, settings ) {
-    
     // Allow instantiation without using new
     if ( !( this instanceof AeroGear.Auth.adapters.Persona ) ) {
         return new AeroGear.Auth.adapters.Persona( name, settings );
@@ -71,7 +70,6 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
     this.getVerificationEndpoint = function() {
         return verificationEndpoint;
     };
-
 
     /**
      * Process the options passed to a method
@@ -134,7 +132,6 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
     });
  */
 AeroGear.Auth.adapters.Persona.prototype.login = function( options ) {
-    
     var that = this,
         onAssertion = function ( assertion ) {
             if ( assertion ) {
@@ -244,7 +241,6 @@ AeroGear.Auth.adapters.Persona.prototype.verify = function( data, options ) {
     persona.logout( onLogout );
 */
 AeroGear.Auth.adapters.Persona.prototype.logout = function( onLogout ) {
-    
     navigator.id.logout();
 
     if ( onLogout ) {
