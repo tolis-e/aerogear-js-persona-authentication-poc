@@ -22,6 +22,8 @@ app.configure(function () {
     app.use( allowCrossDomain );
     app.use( express.json() );
     app.use( express.urlencoded() );
+    app.use( express.cookieParser() );
+    app.use( express.session( { secret: "aerogear-js" } ));
 });
 
 // to be sent to the verification API
@@ -46,6 +48,7 @@ app.post("/verify", function ( req, res ) {
 
                         if ( valid ) {
                             console.log( "Assertion verified successfully for email: " + email );
+                            req.session.email = email;
                             res.json(email);
                         } else {
                             console.log( "Failed to verify assertion:" + verifierResp.reason );

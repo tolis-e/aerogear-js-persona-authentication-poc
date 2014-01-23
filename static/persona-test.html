@@ -20,6 +20,7 @@
                 $( '#login' ).click( function() {
 
                     var onSuccessVerification = function( response ) {
+                            // at this point you are logged in
                             console.log( "Assertion was successfully verified email: '" + response  + "'");
                             $( '#email' ).html( "<p>" + 'Logged in email: ' + response  + "</p>");
                             $( '#logout' ).fadeIn();
@@ -43,6 +44,7 @@
 
                 $( '#logout').click( function() {
                     var onLogout = function () {
+                        // apart from persona logout you should call a logout method to your service
                         $( '#email' ).html( '' );
                         $( '#logout' ).fadeOut();
                         $( '#login' ).fadeIn();
