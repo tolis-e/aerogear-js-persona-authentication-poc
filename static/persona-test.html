@@ -5,10 +5,22 @@
         <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
         <script type="text/javascript" src="../src/aerogear.core.js"></script>
         <script type="text/javascript" src="../src/authentication/aerogear.auth.js"></script>
+        <script type="text/javascript" src="../src/authentication/adapters/rest.js"></script>
         <script type="text/javascript" src="../src/authentication/adapters/persona.js"></script>
         <script>
             $( document ).ready( function () {
+                
+                // will be used for interaction with our API / backend
+                var auth = AeroGear.Auth();
+                auth.add({
+                    name : "ourService",
+                    settings : {
+                        baseURL : "http://127.0.0.1:3000/"
+                    }
+                });
+                var ourService = auth.modules.ourService;
 
+                // will be used for persona interaction
                 var persona = AeroGear.Auth({
                         name: 'persona',
                         type: 'Persona',
@@ -17,42 +29,86 @@
                         }
                     }).modules.persona;
 
-                $( '#login' ).click( function() {
+                var initialPageUI,
+                    loggedInPageUI,
+                    onPersonaLogin,
+                    onPersonaLoginError,
+                    onPersonaLogout,
+                    ourServiceLogin;
+                
+                // show the main page
+                initialPageUI = function () {
+                    $( '#email' ).html( '' );
+                    $( '#logout' ).fadeOut();
+                    $( '#login' ).fadeIn();
+                };
 
-                    var onSuccessVerification = function( response ) {
-                            // at this point you are logged in
-                            console.log( "Assertion was successfully verified email: '" + response  + "'");
-                            $( '#email' ).html( "<p>" + 'Logged in email: ' + response  + "</p>");
-                            $( '#logout' ).fadeIn();
-                            $( '#login' ).fadeOut();
-                        }, 
-                        onFailedVerification = function( error ) {
-                            console.log( "Assertion verification failed error: " + error );
+                // on Persona logout we should perform logout from our service as well 
+                // and show the initial page
+                onPersonaLogout = function () {
+                    ourService.logout({
+                        success: function () {
+                            initialPageUI.apply( this, arguments );
+                        }
+                    });
+                };
+
+                // show the logged in page
+                loggedInPageUI = function( email ) {
+                    $( '#email' ).html( "<p>" + 'Logged in email: ' + email + "</p>");
+                    $( '#logout' ).fadeIn();
+                    $( '#login' ).fadeOut();
+                };
+
+                // function which calls our service to check whether are logged in
+                ourServiceLogin = function() {
+                    ourService.login( null, {
+                        success: function( email ) {
+                            console.log( 'Already logged in: email: '  + email );
+                            loggedInPageUI.apply( this, arguments );
                         },
-                        onLoginError = function () {
-                            console.log("ERROR during Mozilla Persona login");
-                        };
+                        error: function() {
+                            console.log( 'Not logged in' );
+                            initialPageUI.apply( this, arguments );
+                        }
+                    });
+                };
+                
+                // on page refresh check whether we are logged in
+                ourServiceLogin.apply();
+                
+                // callback to be executed when the assertion is verified
+                onPersonaLogin = function( email ) {
+                    persona.setEmail( email );
+                    loggedInPageUI.apply( this, arguments );
+                };
 
-                        persona.login({ 
-                            onAssertion: function ( assertion ) {
-                                persona.verify( { assertion: assertion }, { success: onSuccessVerification, error: onFailedVerification } );
-                            },
-                            error: onLoginError
-                        });
+                // callback to be executed when the assertion verification fails
+                onPersonaLoginError = function( error ) {
+                    console.log( "Persona Error during verification: " + error);
+                    initialPageUI.apply();
+                };
 
+                // Persona watch - set login, logout callbacks
+                    persona.watch({
+                        onLogin: function ( assertion ) {
+                            this.verify( { assertion: assertion }, { success: onPersonaLogin, error: onPersonaLoginError } );
+                        },
+                        onLoginError: onPersonaLoginError,
+                        onLogout: onPersonaLogout
+                    });
+                
+                $( '#login' ).click( function() {
+                    if ( !persona.getEmail() ) {
+                        // initiate the Persona procedure
+                        persona.login();
+                    }
                 });
 
                 $( '#logout').click( function() {
-                    var onLogout = function () {
-                        // apart from persona logout you should call a logout method to your service
-                        $( '#email' ).html( '' );
-                        $( '#logout' ).fadeOut();
-                        $( '#login' ).fadeIn();
-                    };
-
-                    persona.logout( onLogout );
+                    // Persona logout
+                    persona.logout();
                 });
-
             });
         </script>
     </head>

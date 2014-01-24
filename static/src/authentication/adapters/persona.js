@@ -41,6 +41,8 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
 
     // Private Instance vars
     var type = "Persona",
+        email = null,
+        localStorageName = "ag-auth-persona",
         verificationEndpoint = settings.verificationEndpoint;
 
     // Privileged methods
@@ -52,6 +54,42 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
     this.getSettings = function() {
         return settings;
     };
+
+    /**
+     * Returns the value of the private settings var
+     * @private
+     * @augments Persona 
+     */
+    this.getLocalStorageName = function() {
+        return localStorageName;
+    }
+    
+    /**
+     * Returns the value of the private settings var
+     * @private
+     * @augments Persona 
+     */
+    this.getEmail = function() {
+        return localStorage[ localStorageName ] || email;
+    }
+
+    /**
+     * Stores the email value in local storage
+     * @private
+     * @augments Persona 
+     */ 
+    this.setEmail = function( email ) {
+        localStorage.setItem( localStorageName, email );
+    }
+
+    /**
+     * Removes the email from local storage
+     * @private
+     * @augments Persona
+     */ 
+    this.removeEmail = function() {
+        localStorage.removeItem( localStorageName );
+    }
 
     /**
         Returns the value of the private name var
@@ -115,34 +153,62 @@ AeroGear.Auth.adapters.Persona = function( name, settings ) {
     }).modules.persona;
     
     var onSuccessVerification = function( email ) {
-            console.log( "Assertion was successfully verified email: '" + email  + "'");
+            console.log( "Assertion was successfully verified email: '" + email  + "'" );
         },
-        onFailedVerification= function( error ) {
-            console.log( "Assertion verification failed");
+        onFailedVerification = function( error ) {
+            console.log( "Assertion verification failed" );
         },
-        onLoginError = function () {
-            console.log("ERROR during Mozilla Persona login");
-        };
+        onLogout = function () {
+            console.log( "Logout callback called" );
+        },
+        onError = function () {
+            console.log( "Could not create signed assertion " );
+        }
 
-    persona.login({
-        onAssertion: function ( assertion ) {
+    persona.watch({
+        success: function ( assertion ) {
             persona.verify( { assertion: assertion }, { success: onSuccessVerification, error: onFailedVerification } );
         },
-        error: onLoginError
+        error: onError,
+        
     });
  */
-AeroGear.Auth.adapters.Persona.prototype.login = function( options ) {
+AeroGear.Auth.adapters.Persona.prototype.watch = function( options ) {
     var that = this,
-        onAssertion = function ( assertion ) {
+        onLogin = function ( assertion ) {
             if ( assertion ) {
-                options.onAssertion.apply ( that, arguments );
-            } else {
-                options.error.apply( this, arguments );
-            }
+                 options.onLogin.apply ( that, arguments );
+             } else {
+                 options.onLoginError.apply( that, arguments );
+             }
+         },
+        onLogout = function () {
+            that.removeEmail();
+            options.onLogout.apply( that, arguments );
         };
+ 
+     navigator.id.watch ({
+         loggedInUser: that.getEmail(),
+         onlogin: onLogin, 
+         onlogout: onLogout
+     });
+};
 
-    // ask the user to choose an email address to sign in with
-    navigator.id.get ( onAssertion );
+/**
+    Enables the Persona authentication sign-in procedure
+    @example
+    var persona = AeroGear.Auth({
+        name: 'persona',
+        type: 'Persona',
+        settings: {
+            verificationEndpoint: "http://127.0.0.1:3000/authenticate"
+        }
+    }).modules.persona;
+    
+    persona.login();
+ */
+AeroGear.Auth.adapters.Persona.prototype.login = function() {
+    navigator.id.request();
 };
 
 /**
@@ -180,7 +246,8 @@ AeroGear.Auth.adapters.Persona.prototype.login = function( options ) {
 AeroGear.Auth.adapters.Persona.prototype.verify = function( data, options ) {
     options = options || {};
 
-    var success,
+    var that = this,
+        success,
         error,
         extraOptions;
 
@@ -192,7 +259,7 @@ AeroGear.Auth.adapters.Persona.prototype.verify = function( data, options ) {
     
     error = function( jqXHR, textStatus, errorThrown ) {
 
-        navigator.id.logout();
+        that.logout();
 
         var args;
 
@@ -224,7 +291,6 @@ AeroGear.Auth.adapters.Persona.prototype.verify = function( data, options ) {
 
 /**
     Causes the browser to reset the automatic login flag
-    @param {Function} [onLogout] - callback to be executed when logout is completed
     @example
     var persona = AeroGear.Auth({
         name: 'persona',
@@ -234,16 +300,8 @@ AeroGear.Auth.adapters.Persona.prototype.verify = function( data, options ) {
         }
     }).modules.persona;
 
-    var onLogout = function () {
-        console.log( 'Logout is completed' );
-    };
-
-    persona.logout( onLogout );
+    persona.logout();
 */
-AeroGear.Auth.adapters.Persona.prototype.logout = function( onLogout ) {
+AeroGear.Auth.adapters.Persona.prototype.logout = function() {
     navigator.id.logout();
-
-    if ( onLogout ) {
-        onLogout.apply( this, arguments );
-    }
 };

@@ -30,6 +30,17 @@ app.configure(function () {
 var PORT = 3000,
     audience = "http://127.0.0.1:" + PORT;
 
+app.post("/auth/login", function ( req, res ) {
+    var email = req.session.email;
+    console.log ( 'email: ' + email );
+    res.send( email ? email : 'notLoggedIn', email ? 200 : 401 );
+});
+
+app.post("/auth/logout", function ( req, res ) {
+    req.session.destroy();
+    res.send( 'ok', 200 );
+});
+
 // https://developer.mozilla.org/en-US/Persona/Remote_Verification_API?redirectlocale=en-US&redirectslug=Persona%2FRemote_Verification_API
 app.post("/verify", function ( req, res ) {
     var vreq = https.request({
